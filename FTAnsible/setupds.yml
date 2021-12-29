@@ -1,0 +1,20 @@
+---
+
+- name: Setup Deployment Server
+  hosts: ftds01
+  tasks:
+    - name: Install Packages
+      zypper:
+        name: 
+        - dhcp-server
+        - tftp
+        state: present
+    - name: Open Firewall
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      loop:
+        - tftp
+        - dhcp

@@ -1,0 +1,4 @@
+export VMWARE_HOST='192.168.8.10'
+export VMWARE_USER='Administrator@fosstech.biz'
+export VMWARE_PASSWORD='F055tech'
+export VMWARE_VALIDATE_CERTS='no'

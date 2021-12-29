@@ -1,0 +1,20 @@
+all:
+  children:
+    ftinfra:
+      hosts:
+        ftmaster01:
+          ansible_connection: local
+        ftshare01:
+          ansible_connection: ssh
+          ansible_port: 8022
+          ansible_user: ftadmin
+          ansible_password: F055tech
+          ansible_become: yes
+          ansible_become_password: F055tech
+        ftds01:
+          ansible_connection: ssh
+          ansible_user: ftadmin
+          ansible_password: F055tech
+          ansible_become: yes
+          ansible_become_password: F055tech
+    

@@ -1,0 +1,27 @@
+---
+
+- name: VMWware Starter
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: collect a list of the datacenters
+      vmware.vmware_rest.vcenter_datacenter_info:
+      register: my_datacenters
+    - name: Build a list of all the clusters
+      vmware.vmware_rest.vcenter_cluster_info:
+      register: all_the_clusters
+    - name: Retrieve a list of all the datastores
+      vmware.vmware_rest.vcenter_datastore_info:
+      register: my_datastores
+    - name: Build a list of all the folders
+      vmware.vmware_rest.vcenter_folder_info:
+      register: my_folders
+    - name: Printing Info
+      debug:
+        var: "{{ item }}"
+      with_items:
+        - my_datacenters
+        - all_the_clusters
+        - my_datastores
+        - my_folders
