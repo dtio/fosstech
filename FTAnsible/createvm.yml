@@ -1,0 +1,32 @@
+---
+
+- name: VMWware Starter
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+  - name: Create a VM
+    vmware.vmware_rest.vcenter_vm:
+      placement:
+        datastore: 'datastore-404'
+        folder: 'group-v44'
+        cluster: 'domain-c7'
+      name: dtans01
+      guest_OS: RHEL_7_64
+      hardware_version: VMX_11
+      cpu:
+        count: 2
+      memory:
+        size_MiB: 4096
+      scsi_adapters:
+      - type: PVSCSI
+        bus: 0
+        pci_slot_number: 7
+      disks:
+      - type: scsi
+        new_vmdk:
+          capacity: 4000000000
+    register: _result
+  - name: Print Result
+    debug:
+      var: _result

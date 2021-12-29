@@ -1,0 +1,7 @@
+plugin: vmware_vm_inventory
+strict: False
+hostname: 192.168.8.10
+username: administrator@fosstech.biz
+password: F055tech
+validate_certs: False
+with_tags: True
