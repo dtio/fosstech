@@ -2,7 +2,9 @@
 # Find out last node to shutdown
 # cat /var/opt/rh/rh-mariadb105/lib/mysql/grastate.dat 
 # If all safe_to_bootstrap: 0 then set one of them to 1
-# mysqld --wsrep_recover <=== find out the last update
+# sudo -u mysql bash
+# /opt/rh/rh-mariadb105/root/usr/sbin/mysqld --wsrep-recover 
+# check the log cat /var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log | grep "Recovered position" <=== find out the last update
 
 - name: Send kickstart file
   hosts: fttest
@@ -53,7 +55,7 @@
         - 4444/tcp
     - name: Start first node
       shell: scl enable rh-mariadb105 galera_new_cluster
-      when: ansible_facts['hostname'] == "test03"
+      when: ansible_facts['hostname'] == "test02"
     - name: Start services
       service:
         name: rh-mariadb105-mariadb
