@@ -1,0 +1,61 @@
+---
+# Find out last node to shutdown
+# cat /var/opt/rh/rh-mariadb105/lib/mysql/grastate.dat 
+# If all safe_to_bootstrap: 0 then set one of them to 1
+# mysqld --wsrep_recover <=== find out the last update
+
+- name: Send kickstart file
+  hosts: fttest
+  tasks:
+    - name: Register RHEL
+      community.general.redhat_subscription:
+        state: present
+        username: davidtio@fosstech.biz
+        password: F055tech
+        auto_attach: true
+    - name: Enable software collection repos
+      community.general.rhsm_repository:
+        name: rhel-server-rhscl-7-rpms
+#    - name: Disable eus repo
+#      community.general.rhsm_repository:
+#        name: rhel-server-rhscl-7-eus-rpms
+#        state: disabled
+    - name: Install galera
+      yum:
+        name: rh-mariadb105-mariadb-server-galera
+        state: latest
+    - name: Configure galera
+      lineinfile: 
+        path: /etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+        regexp: 'wsrep_cluster_address='
+        line: 'wsrep_cluster_address="gcomm://192.168.18.101,192.168.18.102,192.168.18.103"'
+    - name: Configure galera cluster name
+      lineinfile:
+        path: /etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+        regexp: 'wsrep_cluster_name='
+        line: 'wsrep_cluster_name="ft_galera_cluster"'
+    - name: Set wsrep_on to 1
+      lineinfile:
+        path: /etc/opt/rh/rh-mariadb105/my.cnf.d/galera.cnf
+        regexp: 'wsrep_on='
+        line: 'wsrep_on=ON'
+    - name: Open Firewall Ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - 3306/tcp
+        - 4567/tcp
+        - 4567/udp
+        - 4568/tcp
+        - 4444/tcp
+    - name: Start first node
+      shell: scl enable rh-mariadb105 galera_new_cluster
+      when: ansible_facts['hostname'] == "test03"
+    - name: Start services
+      service:
+        name: rh-mariadb105-mariadb
+        state: started
+        enabled: yes

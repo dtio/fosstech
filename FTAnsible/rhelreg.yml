@@ -1,0 +1,15 @@
+---
+ 
+- name: Send kickstart file
+  hosts: fttest
+  tasks:
+    - name: Register RHEL
+      community.general.redhat_subscription:
+        state: present
+        username: davidtio@fosstech.biz
+        password: F055tech
+        auto_attach: true
+    - name: Enable software collection repos
+      community.general.rhsm_repository:
+        name: rhel-server-rhscl-7-eus-rpms
+

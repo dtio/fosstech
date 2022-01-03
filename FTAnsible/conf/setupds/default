@@ -1,0 +1,11 @@
+default vesamenu.c32
+prompt 1
+timeout 600
+
+display boot.msg
+
+label linux
+  menu label ^Install RHEL 7.9
+  menu default
+  kernel images/RHEL-7.9/vmlinuz
+  append initrd=images/RHEL-7.9/initrd.img ip=dhcp inst.repo=http://192.168.8.13/RHEL-7.9 ks=http://192.168.8.13/ks/svrname.ks

@@ -1,0 +1,13 @@
+---
+ 
+- name: Send kickstart file
+  hosts: ftds01
+  tasks:
+    - name: kickstart file
+      copy:
+        src: "./conf/kickstart/{{ item }}"
+        dest: /srv/www/htdocs/ks/
+      loop:
+        - test02.ks
+        - test03.ks
+
