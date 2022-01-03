@@ -1,13 +1,35 @@
 ---
-
+# To Prepare RHEL 7 Install Server
+# Mount RHEL7.9 ISO to /mnt
+# * rpm2cpio /mnt/Packages/syslinux-4.05-15.el7.x86_64.rpm | cpio -dimv 
+# * rpm2cpio /mnt/Packages/shim-x64-15-11.el7.x86_64.rpm | cpio -dimv
+# * rpm2cpio /mnt/Packages/grub2-efi-x64-2.02-0.87.el7.x86_64.rpm | cpio -dimv
+# * cp usr/share/syslinux/pxelinux.0 conf/setupds-pxelinux.0
+# * cp /mnt/images/pxeboot/{vmlinuz,initrd.img} conf/setupds-pxeboot
+# * cp boot/efi/EFI/redhat/shim.efi conf/setupds
+# * cp boot/efi/EFI/redhat/grubx64.efi conf/setupds 
+ 
 - name: Setup Deployment Server
   hosts: ftds01
   tasks:
+    - name: Mount FT NFS
+      mount:
+        src: 192.168.8.231:/mnt/NAS/ftds01/ftds01 
+        path: /mnt 
+        state: mounted
+        fstype: nfs
+    - name: Mount RHEL7.9 ISO
+      mount:
+        src: /mnt/ISOs/rhel-server-7.9-x86_64-dvd.iso
+        path: /srv/www/htdocs/RHEL-7.9/
+        state: mounted
+        fstype: iso9660
     - name: Install Packages
       zypper:
         name: 
         - dhcp-server
         - tftp
+        - nginx
         state: present
     - name: Open Firewall
       ansible.posix.firewalld:
@@ -18,3 +40,55 @@
       loop:
         - tftp
         - dhcp
+        - http
+    - name: Send dhcpd configuration file
+      copy: 
+        src: ./conf/setupds-dhcpd.conf
+        dest: /etc/dhcpd.conf
+    - name: Set dhcpd interface 
+      lineinfile:
+        path: /etc/sysconfig/dhcpd
+        regexp: '^DHCPD_INTERFACE='
+        line: DHCPD_INTERFACE=eth1
+    - name: Send pxelinux menu file
+      copy:
+        src: ./conf/setupds/default
+        dest: /srv/tftpboot/pxelinux/pxelinux.cfg/
+    - name: Send pxelinux.0 file
+      copy:
+        src: ./conf/setupds-pxelinux.0
+        dest: /srv/tftpboot/pxelinux/pxelinux.0
+    - name: Send vesamenu.c32
+      copy:
+        src: ./conf/setupds/vesamenu.c32
+        dest: /srv/tftpboot/pxelinux/
+    - name: Send RHEL7.9 boot images
+      copy:
+        src: "{{ item }}"
+        dest: /srv/tftpboot/pxelinux/images/RHEL-7.9/
+      loop:
+        - conf/setupds-pxeboot/vmlinuz
+        - conf/setupds-pxeboot/initrd.img
+    - name: Send EFI files
+      copy:
+        src: "{{ item }}"
+        dest: /srv/tftpboot/
+      loop:
+        - conf/setupds/shim.efi
+        - conf/setupds/grubx64.efi
+        - conf/setupds/grub.cfg
+    - name: Configure nginx to autoindex
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        insertafter: 'index  index.html index.htm;'
+        line: autoindex on;
+    - name: Start services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - dhcpd
+        - tftp
+        - nginx
+

@@ -17,4 +17,17 @@ all:
           ansible_password: F055tech
           ansible_become: yes
           ansible_become_password: F055tech
-    
+    fttest:
+      hosts:
+        test01:
+          ansible_connection: ssh
+          ansible_user: root
+          ansible_password: F055tech
+        test02:
+          ansible_connection: ssh
+          ansible_user: root
+          ansible_password: F055tech
+        test03:
+          ansible_connection: ssh
+          ansible_user: root
+          ansible_password: F055tech        
