@@ -15,7 +15,7 @@ import datetime
 import os
 
 INDIR="/root/data/"
-CHUNK_SIZE = 149*1024*1024
+CHUNK_SIZE = 49*1024*1024
 OUTDIR = "/root/data/done/"
 
 if len(sys.argv) > 1:
@@ -48,3 +48,4 @@ for filepath in filelist:
         outfile.close()
         part += 1
     largefile.close()
+    os.remove("%s%s" % (OUTDIR, sfilename))
