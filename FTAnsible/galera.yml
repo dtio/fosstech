@@ -6,7 +6,7 @@
 # /opt/rh/rh-mariadb105/root/usr/sbin/mysqld --wsrep-recover 
 # check the log cat /var/opt/rh/rh-mariadb105/log/mariadb/mariadb.log | grep "Recovered position" <=== find out the last update
 
-- name: Send kickstart file
+- name: Setup Galera Cluster
   hosts: fttest
   tasks:
     - name: Register RHEL
@@ -18,10 +18,6 @@
     - name: Enable software collection repos
       community.general.rhsm_repository:
         name: rhel-server-rhscl-7-rpms
-#    - name: Disable eus repo
-#      community.general.rhsm_repository:
-#        name: rhel-server-rhscl-7-eus-rpms
-#        state: disabled
     - name: Install galera
       yum:
         name: rh-mariadb105-mariadb-server-galera

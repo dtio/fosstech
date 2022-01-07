@@ -1,0 +1,64 @@
+---
+
+- name: Setup GFS Cluster
+  hosts: ftgfs
+  tasks:
+    - name: Register RHEL
+      community.general.redhat_subscription:
+        state: present
+        username: davidtio@fosstech.biz
+        password: F055tech
+        auto_attach: true
+    - name: Enable Resilient Storage Repo
+      community.general.rhsm_repository:
+        name: rhel-8-for-x86_64-resilientstorage-rpms
+    - name: Update the /etc/hosts file with node name
+      lineinfile:
+        dest: "/etc/hosts"
+        regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        state: present
+        backup: yes
+      with_items: "{{groups['ftgfs']}}"
+    - name: Install Packages
+      yum:
+        name:
+        - pcs
+        - pacemaker
+        - fence-agents-vmware-rest
+        - lvm2-lockd
+        - gfs2-utils
+        - dlm
+        - pcp-zeroconf
+        state: present
+    - name: Open Firewall Ports
+      ansible.posix.firewalld:
+        service: "high-availability"
+        permanent: yes
+        state: enabled
+        immediate: yes
+    - name: Change hacluster password
+      vars:
+        hapasswd: "fosstech"
+      user:
+        name: hacluster
+        update_password: always
+        password: "{{ hapasswd|password_hash('sha512') }}"
+    - name: Start services
+      service:
+        name: pcsd
+        state: started
+        enabled: yes
+    - name: Use lvmlockd
+      lineinfile:
+        dest: "/etc/lvm/lvm.conf"
+        regexp: "\tuse_lvmlockd ="
+        line: "\tuse_lvmlockd = 1" 
+    - name: Create mount points
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /mnt/svglv1
+        - /mnt/svglv2

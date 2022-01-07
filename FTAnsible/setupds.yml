@@ -12,16 +12,16 @@
 - name: Setup Deployment Server
   hosts: ftds01
   tasks:
-    - name: Mount FT NFS
-      mount:
-        src: 192.168.8.231:/mnt/NAS/ftds01/ftds01 
-        path: /mnt 
-        state: mounted
-        fstype: nfs
     - name: Mount RHEL7.9 ISO
       mount:
-        src: /mnt/ISOs/rhel-server-7.9-x86_64-dvd.iso
+        src: "/ds/ftds04/ISOs/Red Hat/RHEL 7/rhel-server-7.9-x86_64-dvd.iso"
         path: /srv/www/htdocs/RHEL-7.9/
+        state: mounted
+        fstype: iso9660
+    - name: Mount RHEL8.4 ISO
+      mount: 
+        src: "/ds/ftds04/ISOs/Red Hat/RHEL 8/rhel-8.4-x86_64-dvd.iso"
+        path: /srv/www/htdocs/RHEL-8.4/
         state: mounted
         fstype: iso9660
     - name: Install Packages
@@ -67,8 +67,15 @@
         src: "{{ item }}"
         dest: /srv/tftpboot/pxelinux/images/RHEL-7.9/
       loop:
-        - conf/setupds-pxeboot/vmlinuz
-        - conf/setupds-pxeboot/initrd.img
+        - conf/setupds-pxeboot/RHEL-7.9/vmlinuz
+        - conf/setupds-pxeboot/RHEL-7.9/initrd.img
+    - name: Send RHEL8.4 boot images
+      copy:
+        src: "{{ item }}"
+        dest: /srv/tftpboot/pxelinux/images/RHEL-8.4/
+      loop:
+        - conf/setupds-pxeboot/RHEL-8.4/vmlinuz
+        - conf/setupds-pxeboot/RHEL-8.4/initrd.img
     - name: Send EFI files
       copy:
         src: "{{ item }}"

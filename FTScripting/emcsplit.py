@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 # Created by David Tio
 # FOSSTECH SOLUTIONS PTE LTD
 # This script is searching for files in INDIR for those with certain timestamp (%Y%m%d%H%M" - 202112071644)
@@ -13,10 +13,11 @@ import sys
 import glob
 import datetime
 import os
+import shutil
 
-INDIR="/root/data/"
+INDIR="/opt/syslog-ng/logfile/*/"
 CHUNK_SIZE = 149*1024*1024
-OUTDIR = "/root/data/done/"
+OUTDIR = "/var/log/devicelog/processed/apache/"
 
 if len(sys.argv) > 1:
   tstr = sys.argv[1]
@@ -34,7 +35,10 @@ for filepath in filelist:
       large = True
       
   sfilename = os.path.basename(filepath)
-  os.rename(filepath, "%s%s" % (OUTDIR, sfilename))
+#  os.rename(filepath, "%s%s" % (OUTDIR, sfilename))
+  shutil.copy2(filepath, "%s%s" % (OUTDIR, sfilename))
+  os.remove(filepath)
+  
   filename=sfilename.split('.txt')[0]
   if large:
     part = 1

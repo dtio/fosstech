@@ -8,6 +8,11 @@
         src: "./conf/kickstart/{{ item }}"
         dest: /srv/www/htdocs/ks/
       loop:
+#RHEL7.9
         - test02.ks
         - test03.ks
+#RHEL8.4
+        - ftgfs01.ks
+        - ftgfs02.ks
+        - ftgfs03.ks
 

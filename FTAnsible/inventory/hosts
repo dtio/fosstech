@@ -31,3 +31,17 @@ all:
           ansible_connection: ssh
           ansible_user: root
           ansible_password: F055tech        
+    ftgfs:
+      hosts:
+        ftgfs01:
+          ansible_connection: ssh
+          ansible_user: root
+          ansible_password: F055tech
+        ftgfs02:
+          ansible_connection: ssh
+          ansible_user: root
+          ansible_password: F055tech
+        ftgfs03:
+          ansible_connection: ssh
+          ansible_user: root
+          ansible_password: F055tech        
