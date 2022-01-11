@@ -1,4 +1,8 @@
 all:
+  vars:
+    ansible_connection: ssh
+    ansible_user: root
+    ansible_password: F055tech
   children:
     ftinfra:
       hosts:
@@ -42,6 +46,11 @@ all:
           ansible_user: root
           ansible_password: F055tech
         ftgfs03:
-          ansible_connection: ssh
-          ansible_user: root
-          ansible_password: F055tech        
+    ftgluster:
+      hosts:
+        ftgluster01:
+        ftgluster02:
+        ftgluster03:
+        ftgluster04:
+        ftgluster05:
+        ftgluster06:

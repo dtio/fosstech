@@ -14,3 +14,8 @@ label rhel84
   menu default
   kernel images/RHEL-8.4/vmlinuz
   append initrd=images/RHEL-8.4/initrd.img ip=dhcp inst.repo=http://192.168.8.13/RHEL-8.4/ inst.ks=http://192.168.8.13/ks/ks.ks
+label rhgs32
+  menu label ^Install RHGS 3.2
+  menu default
+  kernel images/RHGS-3.2/vmlinuz
+  append initrd=images/RHGS-3.2/initrd.img ip=dhcp inst.repo=http://192.168.8.13/RHGS-3.2/ inst.ks=http://192.168.8.13/ks/ks.ks

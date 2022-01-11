@@ -1,0 +1,20 @@
+---
+- name: Migrate VM Network
+  hosts: localhost
+  tasks:
+    - name: Migrate network
+      vmware_guest_network:
+        hostname: 192.168.8.10
+        username: administrator@fosstech.biz
+        password: F055tech
+        validate_certs: false
+        name: "{{ item }}"
+        gather_network_info: False
+        networks:
+          - state: present
+            label: "Network adapter 1"
+            name: 'pg-Production'
+      loop:
+        - ftgfs01
+        - ftgfs02
+        - ftgfs03 

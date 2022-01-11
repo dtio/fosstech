@@ -1,0 +1,32 @@
+---
+- name: Add disks
+  hosts: localhost
+  tasks:
+    - name: Add Disk
+      vmware_guest_disk:
+        hostname: 192.168.8.10
+        username: administrator@fosstech.biz
+        password: F055tech
+        datacenter: FTDC 
+        validate_certs: false
+        name: "{{ item }}"
+        disk:
+          - size_gb: 10
+            type: thin
+            state: present
+            scsi_controller: 0
+            unit_number: 1
+            autoselect_datastore: true
+          - size_gb: 10
+            type: thin
+            state: present
+            scsi_controller: 0
+            unit_number: 2
+            autoselect_datastore: true
+      loop:
+        - ftgluster01
+        - ftgluster02
+        - ftgluster03
+        - ftgluster04
+        - ftgluster05
+        - ftgluster06 

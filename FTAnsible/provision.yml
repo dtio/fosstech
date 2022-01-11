@@ -11,6 +11,12 @@
 #RHEL7.9
         - test02.ks
         - test03.ks
+        - ftgluster01.ks
+        - ftgluster02.ks
+        - ftgluster03.ks
+        - ftgluster04.ks
+        - ftgluster05.ks
+        - ftgluster06.ks
 #RHEL8.4
         - ftgfs01.ks
         - ftgfs02.ks

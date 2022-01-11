@@ -24,6 +24,12 @@
         path: /srv/www/htdocs/RHEL-8.4/
         state: mounted
         fstype: iso9660
+    - name: Mount RHGS3.2 ISO
+      mount:
+        src: "/ds/ftds04/ISOs/Red Hat/Gluster Storage/for RHEL 7/rhgs-3.2-rhel-7-x86_64-dvd-2.iso"
+        path: /srv/www/htdocs/RHGS-3.2/
+        state: mounted
+        fstype: iso9660
     - name: Install Packages
       zypper:
         name: 
@@ -76,6 +82,13 @@
       loop:
         - conf/setupds-pxeboot/RHEL-8.4/vmlinuz
         - conf/setupds-pxeboot/RHEL-8.4/initrd.img
+    - name: Send RHGS3.2 boot images
+      copy:
+        src: "{{ item }}"
+        dest: /srv/tftpboot/pxelinux/images/RHGS-3.2/
+      loop:
+        - conf/setupds-pxeboot/RHGS-3.2/vmlinuz
+        - conf/setupds-pxeboot/RHGS-3.2/initrd.img
     - name: Send EFI files
       copy:
         src: "{{ item }}"

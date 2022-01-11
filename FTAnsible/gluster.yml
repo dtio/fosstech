@@ -1,0 +1,99 @@
+---
+
+- name: Setup Gluster Servers
+  hosts: ftgluster
+  tasks:
+    - name: Send fosstech keys
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'conf/fosstech.pub') }}"
+      when: false
+    - name: Update the /etc/hosts file with node name
+      lineinfile:
+        dest: "/etc/hosts"
+        regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        state: present
+        backup: yes
+      with_items: "{{groups['ftgluster']}}"
+      when: false
+    - name: Register RHEL
+      community.general.redhat_subscription:
+        state: present
+        username: davidtio@fosstech.biz
+        password: F055tech
+        auto_attach: true
+      when: false
+    - name: Enable Gluster 3 Related Repositories
+      community.general.rhsm_repository:
+        name: "{{ item }}"
+      when: false
+      loop:
+        - rhel-ha-for-rhel-7-server-rpms
+        - rh-gluster-3-nfs-for-rhel-7-server-rpms
+    - name: Install Packages
+      yum:
+        name:
+          - nfs-ganesha
+    - name: Create Volume Group 
+      community.general.lvg:
+        vg: "{{ item }}vg"
+        pvs: "/dev/{{ item }}"
+        pesize: 256k
+      loop:
+        - sdb
+        - sdc
+      when: false
+    - name: Create Thin Pool
+      community.general.lvol:
+        vg: "{{ item }}vg"
+        thinpool: "{{ item }}pool"
+        size: 100%FREE
+      loop:
+        - sdb
+        - sdc
+      when: false
+    - name: Create Logical Volume
+      community.general.lvol:
+        vg: "{{ item }}vg"
+        lv: "{{ item }}lv"
+        thinpool: "{{ item }}pool"
+        size: 8g
+      loop:
+        - sdb
+        - sdc
+      when: false
+    - name: Create File System
+      filesystem:
+        fstype: xfs
+        dev: "/dev/{{ item }}vg/{{ item }}lv"
+        opts: "-i size=512"
+      loop:
+        - sdb
+        - sdc
+      when: false
+    - name: Mount Brick Logical Volume
+      mount:
+        path: /rhgs/{{ item }}
+        src: "/dev/{{ item }}vg/{{ item }}lv"
+        fstype: xfs
+        opts: rw,inode64,noatime,nouuid
+        state: mounted
+      loop:
+        - sdb
+        - sdc
+      when: false
+    - name: Create Brick Directory
+      file:
+        path: "/rhgs/{{ item }}/{{ item }}"
+        state: directory
+      loop: 
+        - sdb
+        - sdc
+    - name: Open Firewall Ports
+      ansible.posix.firewalld:
+        service: glusterfs
+        permanent: yes
+        state: enabled
+        immediate: yes

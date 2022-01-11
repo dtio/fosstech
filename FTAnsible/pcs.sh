@@ -11,8 +11,10 @@ pcs cluster enable --all
 pcs stonith create vmfence fence_vmware_rest pcmk_host_map="ftgfs01:ftgfs01,ftgfs02:ftgfs02,ftgfs03:ftgfs03" ipaddr=192.168.8.10 ssl=1 login=administrator@fosstech.biz password=F055tech ssl_insecure=1
 - name: Test Fencing
 fence_vmware_rest -o reboot -a 192.168.8.10 -l administrator@fosstech.biz -p F055tech -z --ssl-insecure -n ftgfs02
+pcs stonith history cleanup
 - name: Set quorum policy to freeze - GFS should not stop(default) even without quorum  
 pcs property set no-quorum-policy=freeze
+pcs property config
 - name: Create locking resource
 pcs resource create dlm --group locking ocf:pacemaker:controld op monitor interval=30s on-fail=fence
 pcs resource create lvmlockd --group locking ocf:heartbeat:lvmlockd op monitor interval=30s on-fail=fence
@@ -20,7 +22,7 @@ pcs resource clone locking interleave=true
 - name: Create gfs vg, journal number is the number of nodes -j3 for 3 nodes
 vgcreate --shared sharedvg /dev/sdb
 lvcreate --activate sy -L3G -n sharedlv1 sharedvg
-lvcreate --activate sy -L2G -n sharedlv2 sharedvg
+lvcreate --activate sy -l100%VG -n sharedlv2 sharedvg
 mkfs.gfs2 -j3 -p lock_dlm -t ftcluster:svglv1 /dev/sharedvg/sharedlv1
 mkfs.gfs2 -j3 -p lock_dlm -t ftcluster:svglv2 /dev/sharedvg/sharedlv2
 # On All Nodes
@@ -35,3 +37,10 @@ pcs resource clone sharedvg interleave=true
 pcs constraint order start locking-clone then sharedvg-clone
 - name: Cleanup Stonith Message
 stonith_admin --cleanup --history ftgfs02    
+- name: Location Constraint
+pcs constraint location ftsvc prefers ftgfs01=1000
+pcs constraint location slv2-clone avoids ftgfs03
+pcs resource defaults resource-stickiness=1500
+pcs constraint config --full
+pcs constraint remove order-locking-clone-slv1-clone-mandatory
+

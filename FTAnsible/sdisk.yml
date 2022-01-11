@@ -1,0 +1,40 @@
+---
+- name: Add disks
+  hosts: localhost
+  tasks:
+    - name: Add Disk
+      community.vmware.vmware_guest_disk:
+        hostname: 192.168.8.10
+        username: administrator@fosstech.biz
+        password: F055tech
+        datacenter: FTDC 
+        validate_certs: false
+        name: "{{ item }}"
+        disk:
+          - size_gb: 5
+            type: eagerzeroedthick
+            state: present
+            scsi_controller: 0
+            unit_number: 1
+            datastore: FTSHAREDS
+            sharing: yes
+      loop:
+        - ftgfs01
+    - name: Attach Disk
+      community.vmware.vmware_guest_disk:
+        hostname: 192.168.8.10
+        username: administrator@fosstech.biz
+        password: F055tech
+        datacenter: FTDC
+        validate_certs: false
+        name: "{{ item }}"
+        disk: 
+          - filename: "[FTSHAREDS]ftgfs01/ftgfs01_1000_1_9100.vmdk"
+            scsi_controller: 0
+            unit_number: 1
+            type: eagerzeroedthick
+            size_gb: 5
+            sharing: yes
+      loop:
+        - ftgfs02
+        - ftgfs03
