@@ -59,3 +59,13 @@ all:
         glmongo01:
         glmongo02:
         glmongo03:
+    glelastic:
+      hosts:
+        glelastic01:
+        glelastic02:
+        glelastic03:
+    glsvr:
+      hosts:
+        glsvr01:
+        glsvr02:
+        glsvr03:

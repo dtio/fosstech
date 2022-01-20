@@ -1,0 +1,89 @@
+---
+
+- name: Setup Elatic Cluster
+  hosts: glelastic
+  tasks:
+    - name: Send fosstech keys
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'conf/fosstech.pub') }}"
+    - name: Update the /etc/hosts file with node name
+      lineinfile:
+        dest: "/etc/hosts"
+        regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        state: present
+        backup: yes
+      with_items: "{{groups['glelastic']}}"
+    - name: Get repos file
+      find:
+        path: "/etc/zypp/repos.d/"
+        pattern: "*.repo"
+      register: repolist
+    - name: Update repositories mirror
+      ansible.builtin.replace:
+        path: "{{ item.path }}"
+        regexp: 'download.opensuse.org'
+        replace: 'twrepo.opensuse.id'
+      with_items: "{{ repolist.files }}"
+    - name: Add elastic search repository
+      community.general.zypper_repository:
+        name: elasticsearch
+        repo: https://artifacts.elastic.co/packages/oss-7.x/yum
+        state: present
+        disable_gpg_check: yes
+    - name: Install elasticsearch and java
+      zypper:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - elasticsearch-oss
+        - java-10-openjdk
+        - insserv-compat
+    - name: Open Firewall Ports
+      ansible.posix.firewalld:
+        service: elasticsearch
+        permanent: yes
+        state: enabled
+        immediate: yes
+    - name: Configure elasticsearch cluster name
+      lineinfile:
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        regexp: "^#cluster.name:"
+        line: "cluster.name: graylog"
+        state: present
+        backup: yes
+    - name: Configure elasticsearch initial master
+      lineinfile:
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        regexp: "^#cluster.initial_master_nodes:"
+        line: 'cluster.initial_master_nodes: ["glelastic01", "glelastic02", "glelastic03"]'
+        state: present
+        backup: yes
+    - name: Configure elastic search auto
+      lineinfile:
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        line: "action.auto_create_index: false"
+        state: present
+        backup: yes
+    - name: Configure elastic network host
+      lineinfile:
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        regexp: "^#network.host:"
+        line: "network.host: {{ ansible_default_ipv4.address }}"
+        state: present
+        backup: yes
+    - name: Configure discovery seed
+      lineinfile:
+        dest: "/etc/elasticsearch/elasticsearch.yml"
+        regexp: "^#discovery.seed_hosts:"
+        line: 'discovery.seed_hosts: ["glelastic01", "glelastic02", "glelastic03"]'
+        state: present
+        backup: yes
+    - name: Start elasticsearch service
+      ansible.builtin.service:
+        name: elasticsearch
+        state: restarted
+        enabled: yes
+
