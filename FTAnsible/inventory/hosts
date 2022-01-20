@@ -54,3 +54,8 @@ all:
         ftgluster04:
         ftgluster05:
         ftgluster06:
+    glmongo:
+      hosts:
+        glmongo01:
+        glmongo02:
+        glmongo03:

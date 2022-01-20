@@ -1,0 +1,74 @@
+---
+
+- name: Setup Mongo DB Replica Set
+  hosts: glmongo
+  tasks:
+    - name: Send fosstech keys
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'conf/fosstech.pub') }}"
+    - name: Update the /etc/hosts file with node name
+      lineinfile:
+        dest: "/etc/hosts"
+        regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+        state: present
+        backup: yes
+      with_items: "{{groups['glmongo']}}"
+    - name: Get repos file
+      find:
+        path: "/etc/zypp/repos.d/"
+        pattern: "*.repo"
+      register: repolist
+    - name: Update repositories mirror
+      ansible.builtin.replace:
+        path: "{{ item.path }}"
+        regexp: 'download.opensuse.org'
+        replace: 'twrepo.opensuse.id'
+      with_items: "{{ repolist.files }}"
+    - name: Add mongodb repo
+      community.general.zypper_repository:
+        name: mongodb
+        repo: https://repo.mongodb.org/zypper/suse/15/mongodb-org/5.0/x86_64/
+        state: present
+        disable_gpg_check: yes
+    - name: Install mongodb
+      zypper:
+        name: mongodb-org
+        state: latest
+    - name: Disable Transparent Huge Page
+      lineinfile:
+        dest: "/etc/default/grub"
+        regexp: "GRUB_CMDLINE_LINUX_DEFAULT="
+        line: GRUB_CMDLINE_LINUX_DEFAULT="splash=silent mitigations=auto quiet transparent_hugepage=never"
+        state: present
+        backup: yes
+    - name: Generate new grub config
+      shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+    - name: Open Firewall Ports
+      ansible.posix.firewalld:
+        service: mongodb
+        permanent: yes
+        state: enabled
+        immediate: yes
+    - name: Configure bind ip
+      lineinfile: 
+        dest: "/etc/mongod.conf"
+        regexp: "  bindIp:"
+        line: "  bindIp: 127.0.0.1,{{ansible_hostname}}"
+        state: present
+        backup: yes
+    - name: Configure replica set
+      blockinfile:
+        path: "/etc/mongod.conf"
+        insertafter: #replication:
+        block: |
+          replication:
+            replSetName: "glrs"
+        backup: yes 
+    - name: Start mongodb service
+      ansible.builtin.service:
+        name: mongod
+        state: restarted
+        enabled: yes
